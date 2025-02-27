@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Voxel Builder</title>
+    <link rel="shortcut icon" href="../favicon.ico" />
+    <link rel="stylesheet" href="../html/resources/default.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: #bfd1e5;
+        font-family: Arial, sans-serif;
+      }
+      #info {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 300px;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 10px;
+        border-radius: 8px;
+        z-index: 1;
+      }
+      #controls {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      #controls input[type="text"] {
+        padding: 5px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      #controls button {
+        padding: 8px;
+        font-size: 14px;
+        border: none;
+        border-radius: 4px;
+        background-color: #4caf50;
+        color: white;
+        cursor: pointer;
+      }
+      #controls button:hover {
+        background-color: #45a049;
+      }
+      #voxel-type-indicator {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      #voxel-type-indicator span {
+        width: 20px;
+        height: 20px;
+        display: inline-block;
+        border: 1px solid #000;
+      }
+      #webgl-output {
+        width: 100vw;
+        height: 100vh;
+      }
+      #save-container {
+        display: flex;
+        gap: 10px;
+      }
+      #save-name {
+        padding: 5px;
+        font-size: 14px;
+      }
+      button {
+        padding: 5px 10px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Import maps polyfill -->
+    <script
+      async
+      src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"
+    ></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "../build/three.module.js",
+          "dat.gui": "../libs/dat.gui.module.js",
+          "OrbitControls": "../build/OrbitControls.js",
+          "FirstPersonControls": "../build/FirstPersonControls.js",
+          "KeyboardState": "../libs/KeyboardState.js"
+        }
+      }
+    </script>
+
+    <div id="info">
+      <h1>Voxel Builder</h1>
+      <div id="controls">
+        <!-- Contêiner botões -->
+        <div style="margin-top: 0px">
+          <!-- Campo de texto e botão de confirmação -->
+          <div id="save-container" style="display: none; margin-bottom: 10px">
+            <input
+              id="save-name"
+              type="text"
+              placeholder="Digite o nome do arquivo..."
+            />
+            <button onclick="confirmSaveModel()">Confirmar</button>
+          </div>
+
+          <!-- Botões Salvar Modelo e Carregar Modelo -->
+          <div style="display: flex; gap: 10px; align-items: center">
+            <!-- Botão de Salvar Modelo -->
+            <div>
+              <button onclick="showSaveField()">Salvar Modelo</button>
+            </div>
+
+            <!-- Botão de Carregar Modelo -->
+            <div>
+              <button onclick="handleLoadModel()">Carregar Modelo</button>
+              <input
+                id="load-file"
+                type="file"
+                accept=".json"
+                style="display: none"
+                onchange="loadModel()"
+              />
+            </div>
+          </div>
+        </div>
+        <!-- Indicador de Tipo de Voxel Atual -->
+        <div
+          style="display: flex; align-items: center; gap: 5px; margin-top: 10px"
+        >
+          <div id="voxel-type-indicator">
+            <span
+              id="current-voxel-color"
+              style="background-color: #00ff00"
+            ></span>
+          </div>
+          <span>Tipo de voxel atual</span>
+        </div>
+        <!-- Instruções de Controle de Teclado -->
+        <div style="margin-top: 5px">
+          <p><strong>Controles de Teclado:</strong></p>
+          <ul style="padding-left: 20px; margin: 0; list-style-type: disc">
+            <li style="margin-bottom: 5px">Setas: Movimentar no plano XZ</li>
+            <li style="margin-bottom: 5px">PageUp/PageDown: Movimentar em Y</li>
+            <li style="margin-bottom: 5px">Q: Adicionar Voxel</li>
+            <li style="margin-bottom: 5px">E: Remover Voxel</li>
+            <li style="margin-bottom: 5px">.: Próximo Tipo de Voxel</li>
+            <li style="margin-bottom: 5px">,: Tipo Anterior de Voxel</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div id="webgl-output"></div>
+
+    <script type="module" src="builder.js"></script>
+  </body>
+</html>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Ambiente de Execução - Parte 3</title>
+    <link rel="shortcut icon" href="../favicon.ico" />
+    <link rel="stylesheet" href="../html/resources/default.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <style>
+        @font-face {
+            font-family: 'Minecraftia';
+            src: url('./Minecraftia-Regular.ttf') format('truetype');
+        }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #bfd1e5;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Container principal do WebGL */
+        #webgl-output {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Estilo da tela de loading */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-family: 'Minecraftia', Arial, sans-serif; /* Usaremos uma fonte estilo Minecraft */
+        }
+
+        #loading-screen h1 {
+            color: #ffffff;
+            text-shadow: 2px 2px #000000;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        #loader {
+            width: 200px;
+            height: 20px;
+            background: #555555;
+            border: 2px solid #000000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #loader-bar {
+            width: 0%;
+            height: 100%;
+            background: #00ff00;
+            transition: width 0.3s ease;
+        }
+
+        #start-button {
+            display: none; /* Escondido até o carregamento terminar */
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 24px;
+            background: #555555;
+            color: #ffffff;
+            border: 2px solid #000000;
+            cursor: pointer;
+            text-shadow: 1px 1px #000000;
+        }
+
+        #start-button:hover {
+            background: #777777;
+        }
+
+        /* Painel de informações, inicialmente compacto */
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            padding: 10px;
+            z-index: 1;
+            width: 160px;
+            height: auto;
+            overflow: hidden;
+            transition: width 0.3s ease;
+            font-size: 12px;
+        }
+
+        /* Quando expandido, aumenta a largura e exibe o conteúdo */
+        #info.expanded {
+            width: 400px;
+        }
+
+        /* Layout em grid para controles */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        /* Ajuste para sliders */
+        input[type="range"] {
+            width: 100%;
+        }
+
+        /* Por padrão, os elementos detalhados ficam escondidos no modo compacto */
+        .hidden-section {
+            display: none;
+        }
+
+        /* No modo expandido, exibimos a seção */
+        #info.expanded .hidden-section {
+            display: block;
+        }
+
+        /* Botão (setinha) para expandir/contrair */
+        #expand-btn {
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+
+            span{
+                font-size: 12px;
+                color: #333;
+                font-weight: bold;
+                text-align: right;
+            }
+        }
+
+        /* Estilo para o slider de névoa */
+        #fog-controls {
+            margin-top: 10px;
+        }
+
+        /* Contador de FPS, alinhado à direita */
+        #fps-counter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1;
+        }
+
+        /* Crosshair */
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 10;
+        }
+        #crosshair::before,
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            background: white;
+        }
+        #crosshair::before {
+            width: 2px;
+            height: 20px;
+            left: 9px;
+        }
+        #crosshair::after {
+            width: 20px;
+            height: 2px;
+            top: 9px;
+        }
+
+        /* Menu de seleção de blocos */
+        #block-selector {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .block-item {
+            width: 40px;
+            height: 40px;
+            border: 2px solid black;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .block-item:hover {
+            transform: scale(1.1);
+        }
+        .block-item.selected {
+            border-color: yellow;
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+
+<body>
+<!-- Tela de loading -->
+<div id="loading-screen">
+    <img src="wallpaper.jpg" alt="Loading Wallpaper" style="position: absolute; width: 100%; height: 100%; object-fit: cover; z-index: -1;" />
+    <h1>Loading...</h1>
+    <div id="loader">
+        <div id="loader-bar"></div>
+    </div>
+    <div id="loading-status" style="color: #ffffff; text-shadow: 2px 2px #000000; font-size: 24px; margin-top: 20px;"></div>
+    <button id="start-button">Start</button>
+</div>
+
+<!-- Botões para seleção de blocos (cores) -->
+<div id="block-selector">
+    <div class="block-item" data-type="0" style="background: url('textures/grass_top.png'); background-size: cover;"></div>
+    <div class="block-item" data-type="1" style="background: url('textures/grass_side.jpg'); background-size: cover;"></div>
+    <div class="block-item" data-type="2" style="background: url('textures/stone.jpg'); background-size: cover;"></div>
+    <div class="block-item" data-type="7" style="background: url('textures/sand.png'); background-size: cover;"></div>
+    <div class="block-item" data-type="3" style="background: url('textures/wood.png'); background-size: cover;"></div>
+    <div class="block-item" data-type="4" style="background: url('textures/green_leaves.png'); background-size: cover;"></div>
+    <div class="block-item" data-type="5" style="background: url('textures/snow.jpeg'); background-size: cover;"></div>
+    <div class="block-item" data-type="10" style="background: url('textures/torch.png'); background-size: cover;"></div>
+    <div class="block-item" data-type="11" style="background: url('textures/glass.png'); background-size: cover;"></div>
+    <div class="block-item" data-type="12" style="background: url('textures/white_wood.png'); background-size: cover;"></div>
+    <div class="block-item" data-type="13" style="background: url('textures/brick.png'); background-size: cover;"></div>
+</div>
+
+<!-- Painel de informações, compacto por padrão -->
+<div id="info" class="compact">
+    <!-- Botão/setinha para expandir ou contrair -->
+    <button id="expand-btn" style="font-family: 'Minecraftia', Arial, sans-serif;"> <span>Precione TAB para expandir o menu</span> ▶</button>
+
+    <!-- Seção de texto que ficará oculta no modo compacto -->
+        <div class="hidden-section">
+            <h2 style="font-family: 'Minecraftia', Arial, sans-serif;">Ambiente de Execução - Parte 3</h2>
+
+            <p style="font-family: 'Minecraftia', Arial, sans-serif;"><strong>Controles de Teclado:</strong></p>
+            <ul style="padding-left: 20px; margin: 0; font-family: 'Minecraftia', Arial, sans-serif;">
+                <li>W/A/S/D: Movimentar em primeira pessoa</li>
+                <li>Pressionar W duas vezes: Correr</li>
+                <li>Mouse: Olhar ao redor (apenas em primeira pessoa)</li>
+                <li><strong>C</strong>: Alternar entre câmeras</li>
+                <li><strong>Y</strong>: Inverter eixo Y da câmera</li>
+                <li><strong>H</strong>: Alternar o tipo de bloco que será adicionado</li>
+                <li><strong>Q</strong>: Ativar/Desativar música</li>
+                <li><strong>Tab</strong> ou clique na setinha: Expandir/contrair menu</li>
+            </ul>
+
+            <p style="font-family: 'Minecraftia', Arial, sans-serif;">
+                <strong>Blocos:</strong><br>
+                - Clique esquerdo: <em>Remove</em> bloco<br>
+                - Clique direito rápido: <em>Adiciona</em> bloco<br>
+                - Clique direito segurando: pré-visualiza bloco antes de posicionar
+            </p>
+
+        <!-- Seção de configuração de névoa -->
+        <div id="fog-controls" style="font-family: 'Minecraftia', Arial, sans-serif;">
+            <label for="fogRange"
+            ><strong>Distância da Névoa:</strong>
+                <span id="fogValue">30</span></label
+            ><br />
+            <input
+                    type="range"
+                    id="fogRange"
+                    min="10"
+                    max="200"
+                    value="30"
+            /><br /><br />
+
+            <!-- Checkbox para desativar a névoa -->
+            <label>
+                <input type="checkbox" id="fogToggle" />
+                <strong>Desativar Névoa ( Tecla F )</strong>
+            </label>
+        </div>
+
+        <!-- Seção de câmeras -->
+        <div id="camera-controls" style="margin-top: 10px; font-family: 'Minecraftia', Arial, sans-serif;">
+            <label for="sensX">
+                <strong>Sensibilidade X:</strong>
+                <span id="sensXValue">3</span>
+            </label>
+            <br />
+            <input
+                    type="range"
+                    id="sensX"
+                    min="0"
+                    max="10"
+                    step="1"
+                    value="3"
+            /><br /><br />
+
+            <label for="sensY">
+                <strong>Sensibilidade Y:</strong>
+                <span id="sensYValue">3</span>
+            </label>
+            <br />
+            <input
+                    type="range"
+                    id="sensY"
+                    min="0"
+                    max="10"
+                    step="1"
+                    value="3"
+            /><br /><br />
+
+            <label>
+                <strong>Inverter Eixo Y:</strong>
+                <span id="invertYStatus">Não</span>
+            </label>
+        </div>
+    </div>
+
+</div>
+
+<!-- Exibe FPS (no canto superior direito) -->
+<div id="fps-counter"></div>
+
+<!-- Mira no centro da tela -->
+<div id="crosshair"></div>
+
+<!-- Div para render do WebGL -->
+<div id="webgl-output"></div>
+
+<!-- Import maps polyfill -->
+<script
+        async
+        src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"
+></script>
+<script type="importmap">
+    {
+      "imports": {
+        "three": "../build/three.module.js",
+        "dat.gui": "../libs/dat.gui.module.js"
+      }
+    }
+</script>
+
+<!-- Seu script principal -->
+<script type="module" src="execution_part3.js"></script>
+
+<script>
+    function updateLoadingProgress(progress) {
+        const loaderBar = document.getElementById("loader-bar");
+        loaderBar.style.width = `${progress}%`;
+    }
+
+    // Script para expandir/contrair o painel ao clicar na setinha ou pressionar TAB
+    const infoPanel = document.getElementById('info');
+    const expandBtn = document.getElementById('expand-btn');
+
+
+    // Altera ícone da setinha
+    function updateArrow() {
+        expandBtn.innerHTML = infoPanel.classList.contains('expanded') ? '<span style="font-family: \'Minecraftia\', Arial, sans-serif;">Precione TAB para retrair o menu</span> ◀' : '<span style="font-family: \'Minecraftia\', Arial, sans-serif;">Precione TAB para expandir o menu</span> ▶';
+    }
+
+    // Evento de clique na setinha
+    expandBtn.addEventListener('click', () => {
+        infoPanel.classList.toggle('expanded');
+        updateArrow();
+    });
+
+    // Evento de pressionar TAB para expandir/contrair
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Tab') {
+            event.preventDefault(); // Evita passar foco para outro elemento
+            infoPanel.classList.toggle('expanded');
+            updateArrow();
+        }
+    });
+</script>
+<div id="game-time" style="position: absolute; bottom: 10px; right: 10px; background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 4px; font-family: 'Minecraftia', Arial, sans-serif; font-size: 16px; z-index: 10;"></div>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Ambiente de Execução</title>
+    <link rel="shortcut icon" href="../favicon.ico">
+    <link rel="stylesheet" href="../html/resources/default.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #bfd1e5;
+            font-family: Arial, sans-serif;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 300px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            z-index: 1;
+        }
+        #webgl-output {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+<!-- Import maps polyfill -->
+<script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+<script type="importmap">
+    {
+        "imports": {
+            "three": "../build/three.module.js",
+            "dat.gui": "../libs/dat.gui.module.js"
+        }
+    }
+</script>
+
+<div id="info">
+    <h1>Ambiente de Execução</h1>
+    <div>
+        <p><strong>Controles de Teclado:</strong></p>
+        <ul style="padding-left: 20px; margin: 0;">
+            <li>W/A/S/D: Movimentar em primeira pessoa</li>
+            <li>Mouse: Olhar ao redor (apenas em primeira pessoa)</li>
+            <li>C: Alternar entre câmeras</li>
+        </ul>
+    </div>
+</div>
+
+<div id="webgl-output"></div>
+
+<script type="module" src="execution.js"></script>
+</body>
+</html>

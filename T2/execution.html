@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Ambiente de Execução - Parte 2</title>
+    <link rel="shortcut icon" href="../favicon.ico" />
+    <link rel="stylesheet" href="../html/resources/default.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #bfd1e5;
+            font-family: Arial, sans-serif;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 300px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            z-index: 1;
+        }
+        #webgl-output {
+            width: 100vw;
+            height: 100vh;
+        }
+        /* Estilo para o slider de névoa */
+        #fog-controls {
+            margin-top: 10px;
+        }
+        #fps-counter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+<!-- Import maps polyfill -->
+<script
+        async
+        src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"
+></script>
+<script type="importmap">
+    {
+      "imports": {
+        "three": "../build/three.module.js",
+        "dat.gui": "../libs/dat.gui.module.js"
+      }
+    }
+</script>
+
+<div id="info">
+    <h1>Ambiente de Execução - Parte 2</h1>
+    <div>
+        <p><strong>Controles de Teclado:</strong></p>
+        <ul style="padding-left: 20px; margin: 0">
+            <li>W/A/S/D: Movimentar em primeira pessoa</li>
+            <li>Pressionar W duas vezes: Correr</li>
+            <li>Mouse: Olhar ao redor (apenas em primeira pessoa)</li>
+            <li><strong>C</strong>: Alternar entre câmeras</li>
+            <li><strong>H:</strong> Alternar helper de sombras</li>
+            <li><strong>Y:</strong> Inverter eixo Y da câmera</li>
+        </ul>
+    </div>
+    <div id="fog-controls">
+        <label for="fogRange"
+        ><strong>Distância da Névoa:</strong>
+            <span id="fogValue">30</span></label
+        ><br />
+        <input
+                type="range"
+                id="fogRange"
+                min="10"
+                max="200"
+                value="30"
+        /><br /><br />
+
+        <!-- Checkbox para desativar a névoa -->
+        <label
+        ><input type="checkbox" id="fogToggle" />
+            <strong>Desativar Névoa</strong></label
+        >
+    </div>
+    <div id="camera-controls" style="margin-top: 10px">
+        <label for="sensX"
+        ><strong>Sensibilidade X:</strong>
+            <span id="sensXValue">3</span></label
+        ><br />
+        <input
+                type="range"
+                id="sensX"
+                min="0"
+                max="10"
+                step="1"
+                value="3"
+        /><br /><br />
+
+        <label for="sensY"
+        ><strong>Sensibilidade Y:</strong>
+            <span id="sensYValue">3</span></label
+        ><br />
+        <input
+                type="range"
+                id="sensY"
+                min="0"
+                max="10"
+                step="1"
+                value="3"
+        /><br /><br />
+
+        <label
+        ><strong>Inverter Eixo Y:</strong>
+            <span id="invertYStatus">Não</span></label
+        >
+    </div>
+</div>
+
+<div id="fps-counter"></div>
+
+<div id="webgl-output"></div>
+
+<script type="module" src="execution_part2.js"></script>
+</body>
+</html>
